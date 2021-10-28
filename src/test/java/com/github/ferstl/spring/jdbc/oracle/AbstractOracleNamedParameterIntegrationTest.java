@@ -84,6 +84,7 @@ public abstract class AbstractOracleNamedParameterIntegrationTest extends Abstra
   }
 
   @Test
+<<<<<<< Upstream, based on f14fc01aa477e1eba9f5cd76e9c9751e7fb42810
   public void inlistsIn() {
     Map<String, Object> parameters = Collections.singletonMap("ids", new SqlOracleArrayValue("TEST_ARRAY_TYPE", 1, 2, 3));
     List<String> values = this.onpJdbcTemplate.query("SELECT val "
@@ -91,8 +92,35 @@ public abstract class AbstractOracleNamedParameterIntegrationTest extends Abstra
             + "WHERE id IN(SELECT column_value FROM table(:ids))",
             new MapSqlParameterSource(parameters),
             (rs, i) -> rs.getString(1));
-    
+
     assertEquals(Arrays.asList("Value_00002", "Value_00003", "Value_00004"), values);
+  }
+
+  public void multipleColumnsInlistsIn() {
+    Map<String, Object> parameters = Collections.singletonMap("ids",
+        new SqlOracleArrayOfStructValue("NUMBER_VARCHAR_ARRAY_TYPE", "NUMBER_VARCHAR_RECORD",
+            new Object[][] {{1, "Value_00002"}, {2, "Value_00003"}, {3, "Value_00003"}}));
+
+    List<String> values = this.onpJdbcTemplate.query("SELECT val "
+        + "FROM test_table "
+        + "WHERE (id, val) IN (SELECT value1, value2 FROM table(:ids))",
+        new MapSqlParameterSource(parameters),
+        (rs, i) -> rs.getString(1));
+    assertEquals(Arrays.asList("Value_00002", "Value_00003"), values);
+  }
+
+  @Test
+  public void multipleColumnsInlistsAny() {
+    Map<String, Object> parameters = Collections.singletonMap("ids",
+            new SqlOracleArrayOfStructValue("NUMBER_VARCHAR_ARRAY_TYPE", "NUMBER_VARCHAR_RECORD",
+                    new Object[][] {{1, "Value_00002"}, {2, "Value_00003"}, {3, "Value_00003"}}));
+    
+    List<String> values = this.onpJdbcTemplate.query("SELECT val "
+            + "FROM test_table "
+            + "WHERE (id, val) = ANY(SELECT * FROM table(:ids))",
+            new MapSqlParameterSource(parameters),
+            (rs, i) -> rs.getString(1));
+    assertEquals(Arrays.asList("Value_00002", "Value_00003"), values);
   }
 
   @Test
