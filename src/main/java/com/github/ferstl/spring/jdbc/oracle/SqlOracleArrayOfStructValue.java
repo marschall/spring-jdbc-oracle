@@ -30,51 +30,57 @@ import oracle.jdbc.OracleConnection;
 import oracle.jdbc.OraclePreparedStatement;
 
 /**
- * And implementation of the {@link SqlTypeValue} interface, for convenient
- * creation of provided scalar values as an Oracle {@link Array}.
+ * An implementation of {@link SqlTypeValue} for the convenient creation
+ * of an Oracle {@link Array} from the provided composite values.
  *
  * <h2>SQL Syntax</h2>
- * The following syntax can be used to filter a column against an array of scalar values
+ * Any of the following two syntax can be used to filter columns against an array of composite values
  * <pre>
- * <code>WHERE filtered_column_name = ANY(select column_value from table(:ids))</code>
+ * <code>WHERE (filtered_column_1, filtered_column_2) = ANY(SELECT * FROM table(:ids))</code>
  * </pre>
- * {@code filtered_column_name} has to be replaced by the name of the column to filter against
- * the array while {@code column_value} and {@code table} have to remain literally the same.
+ * <pre>
+ * <code>WHERE (filtered_column_1, filtered_column_2) IN (SELECT attribute_1, attribute_2 FROM table(:ids))</code>
+ * </pre>
+ * {@code filtered_column_x} has to be replaced with the name of the column to filter against
+ * the array. {@code attribute_x} has to be replaced with the name of attribute of the composite type.
+ * <p>{@code *} or listing the attributes can be used with either the {@code IN} or the {@code ANY}
+ * syntax.
+ * 
  * <h2>JdbcTemplate Example</h2>
  * <pre><code> jdbcTemplate.queryForInt("SELECT val "
  *          + "FROM test_table "
- *          + "WHERE id = ANY(SELECT column_value FROM table(?))", new SqlOracleArrayValue("MYARRAYTYPE", values));</code></pre>
+ *          + "WHERE (id, val) = ANY(SELECT * FROM table(?))",
+ *             new SqlOracleArrayOfStructValue("MYARRAYTYPE", "MYCOMPOSITETYPE", values));</code></pre>
  *
  * <h2>OracleNamedParameterJdbcTemplate Example</h2>
- * <pre><code> Map&lt;String, Object&gt; map = Collections.singletonMap("ids", new SqlOracleArrayValue("MYARRAYTYPE", values));
+ * <pre><code> Map&lt;String, Object&gt; map = Collections.singletonMap("ids", new SqlOracleArrayOfStructValue("MYARRAYTYPE", "MYCOMPOSITETYPE", values));
  * namedParameterJdbcTemplate.query("SELECT val "
  *          + "FROM test_table "
- *          + "WHERE id = ANY(SELECT column_value FROM table(:ids))",
- *      new MapSqlParameterSource(map),
- *      (rs, i) -&gt; ...);
+ *          + "WHERE (id, val) = ANY(SELECT * FROM table(:ids))",
+ *             new MapSqlParameterSource(map),
+ *            (rs, i) -&gt; ...);
  * </code></pre>
  *
  * <h2>StoredProcedure Example</h2>
  * <pre><code> storedProcedure.declareParameter(new SqlParameter("myarrayparameter", Types.ARRAY, "MYARRAYTYPE"));
  * ...
  * Map&lt;String, Object&gt; inParams = new HashMap&lt;&gt;();
- * inParams.put("myarrayparameter", new SqlOracleArrayValue("MYARRAYTYPE", objectArray);
+ * inParams.put("myarrayparameter", new SqlOracleArrayOfStructValue("MYARRAYTYPE", "MYCOMPOSITETYPE", objectArray);
  * Map&lt;String, Object&gt; out = storedProcedure.execute(inParams);
  * </code></pre>
  *
  *
- * <p>This class is similar to org.springframework.data.jdbc.support.oracle.SqlArrayValue
+ * <p>This class is similar to {@code org.springframework.data.jdbc.support.oracle.SqlArrayValue}
  * but updated for Spring 5 and later and OJDBC 11.2g and later.
  *
  * <p>This class can be combined with {@link OracleNamedParameterJdbcTemplate} for named parameter
  * support.
  *
  * @see <a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html#createOracleArray_java_lang_String_java_lang_Object_">OracleConnection#createOracleArray</a>
+ * @see <a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/lnpls/plsql-collections-and-records.html#GUID-5ADB7EE2-71F6-4172-ACD8-FFDCF2787A37">6.4 Nested Tables </a>
  * @see Connection#createStruct(String, Object[])
  */
 public final class SqlOracleArrayOfStructValue implements NamedSqlValue {
-  
-  // https://docs.oracle.com/en/database/oracle/oracle-database/21/lnpls/plsql-collections-and-records.html#GUID-6AB78084-231F-4BCA-A905-DB2069E4B885
 
   private final Object[][] values;
 
@@ -88,7 +94,8 @@ public final class SqlOracleArrayOfStructValue implements NamedSqlValue {
    * Constructor that takes two parameters, one parameter with the array of values passed in to
    * the statement and one that takes the type name.
    *
-   * @param arrayTypeName the type name
+   * @param arrayTypeName the name of the collection type
+   * @param structTypeName the name of the collection component type
    * @param values the array containing the values
    */
   public SqlOracleArrayOfStructValue(String arrayTypeName, String structTypeName, Object[][] values) {
