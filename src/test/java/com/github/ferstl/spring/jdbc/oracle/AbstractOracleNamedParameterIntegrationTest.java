@@ -84,7 +84,6 @@ public abstract class AbstractOracleNamedParameterIntegrationTest extends Abstra
   }
 
   @Test
-<<<<<<< Upstream, based on f14fc01aa477e1eba9f5cd76e9c9751e7fb42810
   public void inlistsIn() {
     Map<String, Object> parameters = Collections.singletonMap("ids", new SqlOracleArrayValue("TEST_ARRAY_TYPE", 1, 2, 3));
     List<String> values = this.onpJdbcTemplate.query("SELECT val "
