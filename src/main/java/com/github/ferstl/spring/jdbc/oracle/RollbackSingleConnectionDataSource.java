@@ -39,7 +39,10 @@ import org.springframework.util.ObjectUtils;
  * @see SingleConnectionDataSource
  * @see <a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/jjdbc/JDBC-getting-started.html#GUID-96D6787D-71A6-4282-B17E-0951DED3DEF9">2.3.8 About Committing Changes </a>
  * @see <a href="https://github.com/spring-projects/spring-framework/issues/27249">Spring Framework #27249</a>
+ * 
+ * @deprecated use {@link SingleConnectionDataSource#setRollbackBeforeClose(boolean)} instead
  */
+@Deprecated(forRemoval = true, since = "2.0.1")
 public class RollbackSingleConnectionDataSource extends DriverManagerDataSource implements SmartDataSource, DisposableBean {
 
   /** Create a close-suppressing proxy?. */
