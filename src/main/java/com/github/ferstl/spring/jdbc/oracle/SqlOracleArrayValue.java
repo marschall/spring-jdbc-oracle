@@ -21,8 +21,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import org.springframework.dao.CleanupFailureDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.jdbc.core.SqlTypeValue;
 
 import oracle.jdbc.OracleConnection;
@@ -135,7 +135,7 @@ public final class SqlOracleArrayValue implements NamedSqlValue {
       this.array.free();
       this.array = null;
     } catch (SQLException e) {
-      throw new CleanupFailureDataAccessException("could not free array", e);
+      throw new UncategorizedSQLException("could not free array", null, e);
     }
   }
 
